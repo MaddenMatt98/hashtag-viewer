@@ -1,0 +1,121 @@
+/* Using AI-generated CSS just to get a prototype going */
+/* ==== Reset & Base Styles ==== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+  background-color: #000;
+  color: #E6E6E6;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+/* ==== Navigation Bar ==== */
+nav {
+  background-color: #0D0D0D;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+nav h1 {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #1DA1F2;
+  letter-spacing: -0.5px;
+}
+
+/* ==== Content Section ==== */
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* ==== Page Header ==== */
+.content header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #222;
+  padding-bottom: 0.75rem;
+  font-size: 1.25rem;
+  color: #E6E6E6;
+  font-weight: 600;
+}
+
+/* ==== Links ==== */
+a {
+  color: #1DA1F2;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ==== Hashtag Feed ==== */
+.hashtag {
+  background-color: #0D0D0D;
+  border-bottom: 1px solid #1A1A1A;
+  padding: 1rem 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.hashtag:hover {
+  background-color: #111111;
+}
+
+.hashtag header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.hashtag .about {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Hashtag Body */
+.hashtag .body {
+  font-size: 0.95rem;
+  color: #E6E6E6;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Divider */
+hr {
+  border: none;
+  border-top: 1px solid #1F1F1F;
+  margin: 1rem 0;
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 768px) {
+  .content {
+    margin: 1rem;
+    padding: 0 0.5rem;
+  }
+
+  nav h1 {
+    font-size: 1.2rem;
+  }
+
+  .hashtag {
+    padding: 0.75rem 0.5rem;
+  }
+}
