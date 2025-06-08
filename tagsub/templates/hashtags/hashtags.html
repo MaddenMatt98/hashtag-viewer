@@ -13,4 +13,20 @@
       <hr>
     {% endif %}
   {% endfor %}
+
+  <button id="add-hashtag-btn" onclick="toggleHashtagInput()">Add Hashtag</button>
+
+  <div id="hashtag-input-container" style="display: none;">
+    <form method="post">
+      <input type="text" name="hashtag" id="hashtag" placeholder="Enter Hashtag" value="{{ request.form['hashtag'] }}" required>
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+
+  <script>
+    function toggleHashtagInput() {
+      var inputContainer = document.getElementById('hashtag-input-container');
+      inputContainer.style.display = inputContainer.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
 {% endblock %}

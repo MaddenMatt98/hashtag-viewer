@@ -1,24 +1,48 @@
-from flask import Blueprint, render_template
+from flask import (
+    Blueprint, render_template, request, current_app, redirect, url_for
+)
 
-from tagsub.dynamodb import scan_dynamodb_table
+from tagsub.dynamodb import query, put
 
 bp = Blueprint('hashtags', __name__)
 
 
-@bp.route('/hashtags')
-def view_hashtags() -> str:
-    """Lists all of the hashtags in the database.
+@bp.route('/hashtags', methods=('GET', 'POST'))
+def hashtags() -> str:
+    """Handles functionality for the hashtags view.
 
-    Retrieves a list of hashtags from the DynamoDB table and renders an
-        HTML template using them.
+    If a POST method is made, the hashtag included in the form
+        is inserted into DynamoDB and then redirects to the GET.
+        A GET method returns the list of hashtags for the user.
 
     Returns:
         The rendered template containing the hashtags.
     """
+    if request.method == 'POST':
+        handle = current_app.config.get('USER_HANDLE')
+        hashtag = request.form.get('hashtag')
+        put(
+            {
+                'TableName': current_app.config.get('DYNAMODB_TABLE'),
+                'Item': {
+                    'handle': handle,
+                    'hashtag': hashtag
+                }
+            }
+        )
+        return redirect(url_for('hashtags'))
+
     """
-    TODO: change this to a query that fetches the user id from the
-    Authorization header once authentication is implemented.  This
-    will allow securely supporting multiple users.
+    TODO: Implement a way to get user handle based on their token
+    rather than using a config value.
     """
-    hashtags = scan_dynamodb_table()
+    hashtags = query(
+        {
+            'TableName': current_app.config.get('DYNAMODB_TABLE'),
+            'KeyConditionExpression': 'handle = :handle',
+            'ExpressionAttributeValues': {
+                ':handle': {'S': current_app.config.get('USER_HANDLE')}
+            }
+        }
+    )
     return render_template('hashtags/hashtags.html', hashtags=hashtags)
