@@ -11,6 +11,7 @@ def get_dynamodb_client() -> boto3.client:
             'dynamodb',
             aws_access_key_id=current_app.config.get('AWS_ACCESS_KEY_ID'),
             aws_secret_access_key=current_app.config.get('AWS_SECRET_ACCESS_KEY'),
+            aws_session_token=current_app.config.get('AWS_SESSION_TOKEN'),
             region_name=current_app.config.get('AWS_REGION')
         )
 
