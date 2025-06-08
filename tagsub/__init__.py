@@ -21,6 +21,6 @@ def create_app(test_config=None):
 
     from . import hashtags
     app.register_blueprint(hashtags.bp)
-    app.add_url_rule('/', endpoint='hashtags')
+    app.add_url_rule('/hashtags', endpoint='hashtags')
 
     return app
