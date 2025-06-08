@@ -5,8 +5,8 @@
 {% endblock %}
 
 {% block content %}
-  {% for hashtag in hashtags %}
-    <article class="hashtags">
+  {% for hashtag in user_hashtags %}
+    <article class="user_hashtags">
       <p class="hashtag">{{ hashtag['handle'] }}: {{ hashtag['hashtag'] }}</p>
     </article>
     {% if not loop.last %}

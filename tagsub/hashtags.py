@@ -25,8 +25,8 @@ def hashtags() -> str:
             {
                 'TableName': current_app.config.get('DYNAMODB_TABLE'),
                 'Item': {
-                    'handle': handle,
-                    'hashtag': hashtag
+                    'Handle': handle,
+                    'Hashtag': hashtag
                 }
             }
         )
@@ -36,13 +36,13 @@ def hashtags() -> str:
     TODO: Implement a way to get user handle based on their token
     rather than using a config value.
     """
-    hashtags = query(
+    user_hashtags = query(
         {
             'TableName': current_app.config.get('DYNAMODB_TABLE'),
-            'KeyConditionExpression': 'handle = :handle',
+            'KeyConditionExpression': 'Handle = :Handle',
             'ExpressionAttributeValues': {
-                ':handle': {'S': current_app.config.get('USER_HANDLE')}
+                ':Handle': {'S': current_app.config.get('USER_HANDLE')}
             }
         }
     )
-    return render_template('hashtags/hashtags.html', hashtags=hashtags)
+    return render_template('hashtags/hashtags.html', user_hashtags=user_hashtags)
