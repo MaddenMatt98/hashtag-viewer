@@ -1,8 +1,11 @@
+from copy import deepcopy
+
+import mock
 import pytest
 
 from tagsub.dynamodb import (
     get_dynamodb_client, get_dynamodb_type_serializer, serialize_dynamodb_items,
-    get_dynamodb_type_deserializer, deserialize_dynamodb_items, query
+    get_dynamodb_type_deserializer, deserialize_dynamodb_items, query, put
 )
 from tests.dynamodb_utils import set_up_dynamodb_data
 
@@ -13,30 +16,30 @@ from tests.dynamodb_utils import set_up_dynamodb_data
         (
             [
                 {
-                    'handle': '@dummyuser',
-                    'hashtag': '#DummyHT'
+                    'Handle': '@TestUser',
+                    'Hashtag': '#DummyHT'
                 },
                 {
-                    'handle': '@dummyuser2',
-                    'hashtag': '#DummyHT2'
+                    'Handle': '@TestUser',
+                    'Hashtag': '#DummyHT2'
                 },
                 {
-                    'handle': '@dummyuser3',
-                    'hashtag': '#DummyHT3'
+                    'Handle': '@TestUser',
+                    'Hashtag': '#DummyHT3'
                 }
             ],
             [
                 {
-                    'handle': {'S': '@dummyuser'},
-                    'hashtag': {'S': '#DummyHT'}
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT'}
                 },
                 {
-                    'handle': {'S': '@dummyuser2'},
-                    'hashtag': {'S': '#DummyHT2'}
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT2'}
                 },
                 {
-                    'handle': {'S': '@dummyuser3'},
-                    'hashtag': {'S': '#DummyHT3'}
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT3'}
                 }
             ]
         ),
@@ -66,30 +69,30 @@ def test_serialize_dynamodb_items(items, expected_result, app):
         (
             [
                 {
-                    'handle': {'S': '@dummyuser'},
-                    'hashtag': {'S': '#DummyHT'}
+                    'Handle': {'S': '@dummyuser'},
+                    'Hashtag': {'S': '#DummyHT'}
                 },
                 {
-                    'handle': {'S': '@dummyuser2'},
-                    'hashtag': {'S': '#DummyHT2'}
+                    'Handle': {'S': '@dummyuser2'},
+                    'Hashtag': {'S': '#DummyHT2'}
                 },
                 {
-                    'handle': {'S': '@dummyuser3'},
-                    'hashtag': {'S': '#DummyHT3'}
+                    'Handle': {'S': '@dummyuser3'},
+                    'Hashtag': {'S': '#DummyHT3'}
                 }
             ],
             [
                 {
-                    'handle': '@dummyuser',
-                    'hashtag': '#DummyHT'
+                    'Handle': '@dummyuser',
+                    'Hashtag': '#DummyHT'
                 },
                 {
-                    'handle': '@dummyuser2',
-                    'hashtag': '#DummyHT2'
+                    'Handle': '@dummyuser2',
+                    'Hashtag': '#DummyHT2'
                 },
                 {
-                    'handle': '@dummyuser3',
-                    'hashtag': '#DummyHT3'
+                    'Handle': '@dummyuser3',
+                    'Hashtag': '#DummyHT3'
                 }
             ]
         ),
@@ -114,9 +117,23 @@ def test_deserialize_dynamodb_items(items, expected_result, app):
 
 
 @pytest.mark.parametrize(
-    'expected_result',
+    'items,expected_result',
     [
         (
+            [
+                {
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT'}
+                },
+                {
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT2'}
+                },
+                {
+                    'Handle': {'S': '@TestUser'},
+                    'Hashtag': {'S': '#DummyHT3'}
+                }
+            ],
             [
                 {
                     'Handle': '@TestUser',
@@ -133,11 +150,13 @@ def test_deserialize_dynamodb_items(items, expected_result, app):
             ]
         ),
         (
+            [],
             []
         )
     ]
 )
-def test_query(expected_result, app, dynamodb_table):
+@mock.patch('tagsub.dynamodb.deserialize_dynamodb_items')
+def test_query(mock_deserialize_dynamodb_items, items, expected_result, app, dynamodb_table):
     """
     Will include the tests for get_dynamodb_client()
     here since these functions are always used together.
@@ -150,9 +169,10 @@ def test_query(expected_result, app, dynamodb_table):
             set_up_dynamodb_data(
                 dynamodb_client,
                 app.config.get('DYNAMODB_TABLE'),
-                expected_result
+                deepcopy(expected_result)
             )
 
+        mock_deserialize_dynamodb_items.return_value = deepcopy(expected_result)
         result = query(
             {
                 'TableName': app.config.get('DYNAMODB_TABLE'),
@@ -164,3 +184,50 @@ def test_query(expected_result, app, dynamodb_table):
         )
 
         assert result == expected_result
+        mock_deserialize_dynamodb_items.assert_called_once_with(items)
+
+
+@pytest.mark.parametrize(
+    'item,expected_result',
+    [
+        (
+            {
+                'Handle': '@TestUser',
+                'Hashtag': '#DummyHT'
+            },
+            {
+                'Handle': {'S': '@TestUser'},
+                'Hashtag': {'S': '#DummyHT'}
+            }
+        )
+    ]
+)
+@mock.patch('tagsub.dynamodb.serialize_dynamodb_items')
+def test_put(mock_serialize_dynamodb_items, item, expected_result, app, dynamodb_table):
+    """
+    Will include the tests for get_dynamodb_client()
+    here since these functions are always used together.
+    """
+    with app.app_context():
+        dynamodb_client = get_dynamodb_client()
+        assert dynamodb_client == get_dynamodb_client()
+
+        mock_serialize_dynamodb_items.return_value = [deepcopy(expected_result)]
+        put(
+            {
+                'TableName': app.config.get('DYNAMODB_TABLE'),
+                'Item': deepcopy(item)
+            }
+        )
+
+        result = dynamodb_client.query(
+            TableName=app.config.get('DYNAMODB_TABLE'),
+            KeyConditionExpression='Handle = :Handle and Hashtag = :Hashtag',
+            ExpressionAttributeValues={
+                ':Handle': {'S': item.get('Handle')},
+                ':Hashtag': {'S': item.get('Hashtag')}
+            }
+        )
+
+        assert result.get('Items')[0] == expected_result
+        mock_serialize_dynamodb_items.assert_called_once_with([item])
