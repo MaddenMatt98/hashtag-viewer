@@ -20,7 +20,7 @@ def hashtags() -> str:
     """
     if request.method == 'POST':
         handle = current_app.config.get('USER_HANDLE')
-        hashtag = request.form.get('hashtag')
+        hashtag = request.form.get('Hashtag')
         put(
             {
                 'TableName': current_app.config.get('DYNAMODB_TABLE'),
@@ -45,4 +45,8 @@ def hashtags() -> str:
             }
         }
     )
-    return render_template('hashtags/hashtags.html', user_hashtags=user_hashtags)
+    return render_template(
+        'hashtags/hashtags.html',
+        user_handle=current_app.config.get('USER_HANDLE'),
+        user_hashtags=user_hashtags
+    )
