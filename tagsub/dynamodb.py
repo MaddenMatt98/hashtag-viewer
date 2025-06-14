@@ -102,3 +102,21 @@ def put(parameters):
     parameters['Item'] = serialize_dynamodb_items([parameters.get('Item')])[0]
 
     dynamodb_client.put_item(**parameters)
+
+
+def delete(parameters):
+    """Deletes an item from a DynamoDB table.
+
+    Mainly acts as a passthrough to the DynamoDB client.delete_item() method,
+        but abstracts the serialization of the key so that we don't
+        have to handle that in every view function that delets an item from DynamoDB.
+
+    Args:
+        parameters: The parameters that should be used when calling
+        the DynamoDB boto3 client.
+    """
+    dynamodb_client = get_dynamodb_client()
+
+    parameters['Key'] = serialize_dynamodb_items([parameters.get('Key')])[0]
+
+    dynamodb_client.delete_item(**parameters)
