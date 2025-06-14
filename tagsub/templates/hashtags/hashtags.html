@@ -8,6 +8,10 @@
   {% for hashtag in user_hashtags %}
     <article class="user_hashtags">
       <p class="hashtag">{{ hashtag['Hashtag'] }}</p>
+      <form action="/hashtag/{{ hashtag['Hashtag'] }}/delete" method="post">
+        <input type="hidden" name="hashtag">
+        <button type="submit">Delete</button>
+      </form>
     </article>
     {% if not loop.last %}
       <hr>
@@ -17,8 +21,8 @@
   <button id="add-hashtag-btn" onclick="toggleHashtagInput()">Add Hashtag</button>
 
   <div id="hashtag-input-container" style="display: none;">
-    <form method="post">
-      <input type="text" name="hashtag" id="hashtag" placeholder="Enter Hashtag" value="{{ request.form['Hashtag'] }}" required>
+    <form action="/hashtag" method="post">
+      <input type="text" name="hashtag" id="hashtag" placeholder="Enter Hashtag" value="{{ request.form['hashtag'] }}" required>
       <input type="submit" value="Submit">
     </form>
   </div>

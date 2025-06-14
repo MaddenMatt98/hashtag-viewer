@@ -5,10 +5,15 @@ import pytest
 
 from tagsub.dynamodb import (
     get_dynamodb_client, get_dynamodb_type_serializer, serialize_dynamodb_items,
-    get_dynamodb_type_deserializer, deserialize_dynamodb_items, query, put
+    get_dynamodb_type_deserializer, deserialize_dynamodb_items, query, put, delete
 )
 from tests.dynamodb_utils import set_up_dynamodb_data
 
+
+def test_get_dynamodb_client(app):
+    with app.app_context():
+        dynamodb_client = get_dynamodb_client()
+        assert dynamodb_client == get_dynamodb_client()
 
 @pytest.mark.parametrize(
     'items,expected_result',
@@ -163,8 +168,6 @@ def test_query(mock_deserialize_dynamodb_items, items, expected_result, app, dyn
     """
     with app.app_context():
         dynamodb_client = get_dynamodb_client()
-        assert dynamodb_client == get_dynamodb_client()
-
         if len(expected_result) > 0:
             set_up_dynamodb_data(
                 dynamodb_client,
@@ -210,8 +213,6 @@ def test_put(mock_serialize_dynamodb_items, item, expected_result, app, dynamodb
     """
     with app.app_context():
         dynamodb_client = get_dynamodb_client()
-        assert dynamodb_client == get_dynamodb_client()
-
         mock_serialize_dynamodb_items.return_value = [deepcopy(expected_result)]
         put(
             {
@@ -231,3 +232,68 @@ def test_put(mock_serialize_dynamodb_items, item, expected_result, app, dynamodb
 
         assert result.get('Items')[0] == expected_result
         mock_serialize_dynamodb_items.assert_called_once_with([item])
+
+
+@pytest.mark.parametrize(
+    'key,serialized_key,set_up_data',
+    [
+        (
+            {
+                'Handle': '@TestUser',
+                'Hashtag': '#DummyHT'
+            },
+            {
+                'Handle': {'S': '@TestUser'},
+                'Hashtag': {'S': '#DummyHT'}
+            },
+            True
+        ),
+        (
+            {
+                'Handle': '@TestUser',
+                'Hashtag': '#DummyHT'
+            },
+            {
+                'Handle': {'S': '@TestUser'},
+                'Hashtag': {'S': '#DummyHT'}
+            },
+            False
+        )
+    ]
+)
+@mock.patch('tagsub.dynamodb.serialize_dynamodb_items')
+def test_delete(
+    mock_serialize_dynamodb_items, key, serialized_key, set_up_data, app, dynamodb_table
+):
+    """
+    Will include the tests for get_dynamodb_client()
+    here since these functions are always used together.
+    """
+    with app.app_context():
+        dynamodb_client = get_dynamodb_client()
+        if set_up_data:
+            set_up_dynamodb_data(
+                dynamodb_client,
+                app.config.get('DYNAMODB_TABLE'),
+                [deepcopy(key)]
+            )
+
+        mock_serialize_dynamodb_items.return_value = [deepcopy(serialized_key)]
+        delete(
+            {
+                'TableName': app.config.get('DYNAMODB_TABLE'),
+                'Key': deepcopy(key)
+            }
+        )
+
+        result = dynamodb_client.query(
+            TableName=app.config.get('DYNAMODB_TABLE'),
+            KeyConditionExpression='Handle = :Handle and Hashtag = :Hashtag',
+            ExpressionAttributeValues={
+                ':Handle': {'S': key.get('Handle')},
+                ':Hashtag': {'S': key.get('Hashtag')}
+            }
+        )
+
+        assert len(result.get('Items')) == 0
+        mock_serialize_dynamodb_items.assert_called_once_with([key])
